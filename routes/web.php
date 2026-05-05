@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Dashboard\AdminDashboardController;
 use App\Http\Controllers\Dashboard\DeanDashboardController;
+use App\Http\Controllers\Dashboard\DirectorMonitoringController;
 use App\Http\Controllers\Dashboard\FacultyDashboardController;
 use App\Http\Controllers\Dean\DeanReviewController;
 use App\Http\Controllers\EmailVerificationController;
@@ -449,6 +450,18 @@ Route::get('/director/dashboard', function () {
     return redirect()->route('faculty.dashboard');
 })
     ->name('director.dashboard')
+    ->middleware(['auth', 'role:director', 'permission:director.dashboard']);
+
+Route::get('/director/monitoring', [DirectorMonitoringController::class, 'index'])
+    ->name('director.monitoring')
+    ->middleware(['auth', 'role:director', 'permission:director.dashboard']);
+
+Route::get('/director/monitoring/ipcr/{submission}', [DirectorMonitoringController::class, 'showIpcr'])
+    ->name('director.monitoring.ipcr.show')
+    ->middleware(['auth', 'role:director', 'permission:director.dashboard']);
+
+Route::get('/director/monitoring/opcr/{submission}', [DirectorMonitoringController::class, 'showOpcr'])
+    ->name('director.monitoring.opcr.show')
     ->middleware(['auth', 'role:director', 'permission:director.dashboard']);
 
 /*

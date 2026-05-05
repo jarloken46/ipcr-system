@@ -20,6 +20,9 @@
 
                 <div class="hidden lg:flex items-center space-x-6 xl:space-x-8">
                     <a href="{{ route('faculty.dashboard') }}" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                    @if(auth()->user()->hasRole('director'))
+                        <a href="{{ route('director.monitoring') }}" class="text-gray-600 hover:text-gray-900">Monitoring</a>
+                    @endif
                     <a href="{{ route('faculty.my-ipcrs') }}" class="text-gray-600 hover:text-gray-900">My IPCRs</a>
                     <a href="{{ route('faculty.summary-reports') }}" class="text-blue-600 font-semibold hover:text-blue-700">Summary Reports</a>
                     <div class="relative">
@@ -120,6 +123,9 @@
 
             <div id="mobileMenu" class="hidden lg:hidden pt-4 space-y-2">
                 <a href="{{ route('faculty.dashboard') }}" class="block text-gray-600 hover:text-gray-900 py-2">Dashboard</a>
+                @if(auth()->user()->hasRole('director'))
+                    <a href="{{ route('director.monitoring') }}" class="block text-gray-600 hover:text-gray-900 py-2">Monitoring</a>
+                @endif
                 <a href="{{ route('faculty.my-ipcrs') }}" class="block text-gray-600 hover:text-gray-900 py-2">My IPCRs</a>
                 <a href="{{ route('faculty.summary-reports') }}" class="block text-blue-600 font-semibold hover:text-blue-700 py-2">Summary Reports</a>
                 <a href="{{ route('faculty.profile') }}" class="block text-gray-600 hover:text-gray-900 py-2">Profile</a>
