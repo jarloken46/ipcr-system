@@ -261,3 +261,67 @@
     content: attr(data-placeholder);
     color: #9ca3af;
 }
+
+/* ============================================
+   IPCR Reference Panel (Splitscreen for OPCR)
+   ============================================ */
+.ipcr-ref-panel {
+    animation: ipcrPanelSlideIn 0.3s ease-out;
+}
+
+@keyframes ipcrPanelSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.ipcr-ref-card {
+    background: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.ipcr-ref-card:hover {
+    background: #f5f3ff;
+    border-color: #a5b4fc;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+}
+
+/* Compact IPCR table in the panel */
+#ipcrRefDetailTableBody td {
+    word-break: break-word;
+    line-height: 1.3;
+}
+
+#ipcrRefDetailTableBody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+/* Scrollbar styling for the panel */
+#ipcrRefContent::-webkit-scrollbar {
+    width: 4px;
+}
+
+#ipcrRefContent::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#ipcrRefContent::-webkit-scrollbar-thumb {
+    background: #c7d2fe;
+    border-radius: 4px;
+}
+
+#ipcrRefContent::-webkit-scrollbar-thumb:hover {
+    background: #818cf8;
+}
+
+/* Hide the reference panel on small screens */
+@media (max-width: 1023px) {
+    .ipcr-ref-panel {
+        display: none !important;
+    }
+}

@@ -3137,7 +3137,179 @@
             document.getElementById('opcrSaveDraftBtn')?.classList.remove('hidden');
             document.getElementById('opcrUpdateSubmissionBtn')?.classList.add('hidden');
             resetSupportingDocumentContext('opcr');
+            // Close the IPCR reference panel if open
+            const panel = document.getElementById('ipcrReferencePanel');
+            if (panel && !panel.classList.contains('hidden')) {
+                panel.classList.add('hidden');
+                document.getElementById('opcrCompareBtnLabel').textContent = 'Compare IPCRs';
+            }
         }
+
+        // =====================================================
+        // IPCR REFERENCE PANEL (Splitscreen for OPCR)
+        // =====================================================
+        let ipcrRefDataLoaded = false;
+        let ipcrRefData = [];
+
+        window.toggleIpcrReferencePanel = function() {
+            const panel = document.getElementById('ipcrReferencePanel');
+            const btnLabel = document.getElementById('opcrCompareBtnLabel');
+            if (!panel) return;
+
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                if (btnLabel) btnLabel.textContent = 'Hide IPCRs';
+                if (!ipcrRefDataLoaded) {
+                    loadApprovedIpcrs();
+                }
+            } else {
+                panel.classList.add('hidden');
+                if (btnLabel) btnLabel.textContent = 'Compare IPCRs';
+            }
+        };
+
+        function loadApprovedIpcrs() {
+            const listEl = document.getElementById('ipcrRefList');
+            const countEl = document.getElementById('ipcrRefCount');
+            if (!listEl) return;
+
+            listEl.innerHTML = `
+                <div class="flex items-center justify-center py-12">
+                    <div class="text-center">
+                        <div class="animate-spin w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full mx-auto mb-2"></div>
+                        <p class="text-xs text-gray-400">Loading IPCRs...</p>
+                    </div>
+                </div>`;
+
+            fetch('/faculty/opcr/approved-ipcrs', {
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.submissions) {
+                    ipcrRefData = data.submissions;
+                    ipcrRefDataLoaded = true;
+                    if (countEl) countEl.textContent = `${data.submissions.length} submitted IPCR${data.submissions.length !== 1 ? 's' : ''} in your department`;
+                    renderIpcrRefList(data.submissions);
+                } else {
+                    listEl.innerHTML = `<p class="text-xs text-gray-400 text-center py-8">Could not load IPCRs.</p>`;
+                }
+            })
+            .catch(() => {
+                listEl.innerHTML = `<p class="text-xs text-red-400 text-center py-8">Error loading IPCRs.</p>`;
+            });
+        }
+
+        function renderIpcrRefList(submissions) {
+            const listEl = document.getElementById('ipcrRefList');
+            if (!listEl) return;
+
+            if (submissions.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-10">
+                        <svg class="w-10 h-10 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <p class="text-xs text-gray-400">No submitted IPCRs found in your department.</p>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            submissions.forEach((sub, idx) => {
+                const isCal = sub.calibration_status === 'calibrated';
+                const scoreBadge = isCal
+                    ? `<span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-700">${parseFloat(sub.calibration_score).toFixed(2)}</span>`
+                    : `<span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-gray-100 text-gray-500">Pending</span>`;
+
+                html += `
+                <div class="ipcr-ref-card group cursor-pointer rounded-xl border border-gray-200 p-3 hover:border-indigo-300 hover:shadow-md transition-all duration-200" onclick="expandIpcrInPanel(${idx})">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5 mb-1">
+                                <div class="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                                    <span class="text-[8px] font-bold text-indigo-600">${(sub.user_name || 'U').charAt(0).toUpperCase()}</span>
+                                </div>
+                                <p class="text-xs font-semibold text-gray-900 truncate">${sub.user_name}</p>
+                            </div>
+                            <p class="text-[10px] text-gray-600 truncate pl-6">${sub.title}</p>
+                            <div class="flex items-center gap-2 mt-1 pl-6">
+                                <span class="text-[9px] text-gray-400">${sub.school_year} • ${sub.semester}</span>
+                                ${scoreBadge}
+                            </div>
+                        </div>
+                        <svg class="w-4 h-4 text-gray-300 group-hover:text-indigo-400 flex-shrink-0 mt-1 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                </div>`;
+            });
+
+            listEl.innerHTML = html;
+        }
+
+        window.expandIpcrInPanel = function(index) {
+            const sub = ipcrRefData[index];
+            if (!sub) return;
+
+            document.getElementById('ipcrRefList').classList.add('hidden');
+            document.getElementById('ipcrRefDetail').classList.remove('hidden');
+            document.getElementById('ipcrRefBackBtn').classList.remove('hidden');
+            document.getElementById('ipcrRefBackBtn').classList.add('flex');
+
+            document.getElementById('ipcrRefDetailName').textContent = sub.user_name;
+            document.getElementById('ipcrRefDetailMeta').textContent = `${sub.title} • ${sub.school_year} • ${sub.semester}`;
+
+            const tbody = document.getElementById('ipcrRefDetailTableBody');
+            if (tbody && sub.table_body_html) {
+                // Parse the HTML and render it read-only with compact styling
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = '<table><tbody>' + sub.table_body_html + '</tbody></table>';
+                const rows = tempDiv.querySelectorAll('tr');
+                let html = '';
+
+                rows.forEach(row => {
+                    const cls = row.className || '';
+                    // Section headers
+                    if (cls.includes('bg-green-100') || cls.includes('bg-purple-100') || cls.includes('bg-orange-100') || cls.includes('bg-blue-100') || cls.includes('bg-gray-100')) {
+                        const text = row.textContent.trim();
+                        let bgClass = 'bg-gray-50';
+                        if (cls.includes('bg-green-100')) bgClass = 'bg-green-50';
+                        else if (cls.includes('bg-purple-100')) bgClass = 'bg-purple-50';
+                        else if (cls.includes('bg-orange-100')) bgClass = 'bg-orange-50';
+                        else if (cls.includes('bg-blue-100')) bgClass = 'bg-blue-50';
+                        html += `<tr class="${bgClass}"><td colspan="7" class="border border-gray-200 px-1.5 py-1 font-semibold text-gray-700 text-[10px]">${text}</td></tr>`;
+                        return;
+                    }
+
+                    // Data rows
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 2) {
+                        html += '<tr>';
+                        const maxCols = Math.min(cells.length, 7);
+                        for (let i = 0; i < 7; i++) {
+                            if (i < cells.length) {
+                                let cellText = '';
+                                const ta = cells[i].querySelector('textarea');
+                                const inp = cells[i].querySelector('input');
+                                if (ta) cellText = ta.textContent.trim();
+                                else if (inp) cellText = inp.value || inp.getAttribute('value') || '';
+                                else cellText = cells[i].textContent.trim();
+                                html += `<td class="border border-gray-200 px-1 py-0.5 text-gray-600 text-[9px] align-top">${cellText}</td>`;
+                            } else {
+                                html += `<td class="border border-gray-200 px-1 py-0.5 text-gray-400 text-[9px]">-</td>`;
+                            }
+                        }
+                        html += '</tr>';
+                    }
+                });
+
+                tbody.innerHTML = html;
+            }
+        };
+
+        window.collapseIpcrInPanel = function() {
+            document.getElementById('ipcrRefList').classList.remove('hidden');
+            document.getElementById('ipcrRefDetail').classList.add('hidden');
+            document.getElementById('ipcrRefBackBtn').classList.add('hidden');
+            document.getElementById('ipcrRefBackBtn').classList.remove('flex');
+        };
 
         window.saveOpcrDocumentTitle = function() {
             const titleInput = document.getElementById('opcrDocumentTitle');

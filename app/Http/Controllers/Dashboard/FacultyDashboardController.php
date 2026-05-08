@@ -796,6 +796,60 @@ class FacultyDashboardController extends Controller
         ));
     }
 
+    /**
+     * Get approved/submitted IPCRs from faculty in the dean's department for OPCR reference.
+     */
+    public function getApprovedIpcrs(Request $request)
+    {
+        $user = $request->user();
+        $departmentId = $user->department_id;
+
+        if (!$departmentId) {
+            return response()->json(['success' => true, 'submissions' => []]);
+        }
+
+        // Get faculty users in the same department (exclude the current user)
+        $facultyUserIds = User::where('department_id', $departmentId)
+            ->where('id', '!=', $user->id)
+            ->where('is_active', true)
+            ->whereHas('userRoles', function ($query) {
+                $query->where('role', 'faculty');
+            })
+            ->pluck('id');
+
+        $submissions = IpcrSubmission::whereIn('user_id', $facultyUserIds)
+            ->where('status', 'submitted')
+            ->whereNotNull('submitted_at')
+            ->with('user:id,name,employee_id')
+            ->orderBy('submitted_at', 'desc')
+            ->get()
+            ->map(function ($submission) {
+                // Get the latest calibrated calibration
+                $calibration = DeanCalibration::where('ipcr_submission_id', $submission->id)
+                    ->where('status', 'calibrated')
+                    ->orderByDesc('updated_at')
+                    ->first();
+
+                return [
+                    'id' => $submission->id,
+                    'title' => $submission->title,
+                    'school_year' => $submission->school_year,
+                    'semester' => $submission->semester,
+                    'submitted_at' => $submission->submitted_at?->format('M d, Y'),
+                    'user_name' => $submission->user?->name ?? 'Unknown',
+                    'employee_id' => $submission->user?->employee_id ?? 'N/A',
+                    'calibration_status' => $calibration ? 'calibrated' : 'pending',
+                    'calibration_score' => $calibration?->overall_score,
+                    'table_body_html' => $submission->table_body_html,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'submissions' => $submissions,
+        ]);
+    }
+
     public function profile(): View
     {
         $departments = \App\Models\Department::all();

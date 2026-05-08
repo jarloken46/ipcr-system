@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -518,7 +518,9 @@
                     <!-- OPCR Document Modal -->
                     <div id="opcrDocumentContainer" class="fixed inset-0 z-50 hidden">
                         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
-                        <div class="relative mx-auto mt-2 sm:mt-8 mb-2 sm:mb-8 w-full max-w-6xl bg-white rounded-2xl shadow-lg max-h-[98vh] sm:max-h-[90vh] overflow-y-auto px-2 sm:px-0">
+                        <div class="relative mx-auto mt-2 sm:mt-8 mb-2 sm:mb-8 w-full max-w-[95vw] flex gap-0 transition-all duration-300" id="opcrSplitscreenWrapper">
+                        <!-- OPCR Editor Main Panel -->
+                        <div class="flex-1 min-w-0 bg-white rounded-2xl shadow-lg max-h-[98vh] sm:max-h-[90vh] overflow-y-auto px-2 sm:px-0 transition-all duration-300" id="opcrEditorPanel">
                             <!-- Document Header -->
                             <div class="bg-gray-50 px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-300 sticky top-0 bg-white z-10">
                                 <div class="flex justify-between items-start mb-3 sm:mb-4">
@@ -534,11 +536,17 @@
                                         <p class="text-xs sm:text-sm text-gray-600">Year: <span id="opcrDisplaySchoolYear" class="font-semibold inline-block min-w-[6rem] px-1 rounded border-b border-dashed border-gray-400 focus:outline-none focus:border-blue-500" contenteditable="true" spellcheck="false"></span></p>
                                         <p class="text-xs sm:text-sm text-gray-600">Period: <span id="opcrDisplaySemester" class="font-semibold"></span></p>
                                     </div>
-                                    <button onclick="closeOpcrDocument()" class="text-gray-500 hover:text-gray-700 ml-2 flex-shrink-0">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                    </button>
+                                    <div class="flex items-center gap-2 ml-2 flex-shrink-0">
+                                        <button onclick="toggleIpcrReferencePanel()" id="opcrCompareIpcrsBtn" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 transition-colors" title="Compare with faculty IPCRs">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"></path></svg>
+                                            <span id="opcrCompareBtnLabel">Compare IPCRs</span>
+                                        </button>
+                                        <button onclick="closeOpcrDocument()" class="text-gray-500 hover:text-gray-700">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm">
                                     <div class="flex flex-col sm:block">
@@ -633,7 +641,85 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div><!-- end opcrEditorPanel -->
+
+                        <!-- IPCR Reference Panel (Splitscreen) -->
+                        <div id="ipcrReferencePanel" class="ipcr-ref-panel hidden bg-white rounded-2xl shadow-lg max-h-[98vh] sm:max-h-[90vh] overflow-hidden flex flex-col border-l border-gray-200" style="width: 420px; min-width: 380px;">
+                            <!-- Panel Header -->
+                            <div class="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50 flex-shrink-0">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center">
+                                            <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-sm font-bold text-gray-900">Faculty IPCRs</h3>
+                                            <p class="text-[10px] text-gray-500" id="ipcrRefCount">Loading...</p>
+                                        </div>
+                                    </div>
+                                    <button onclick="toggleIpcrReferencePanel()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-white/60 transition">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                </div>
+                                <!-- Back button (shown when viewing an IPCR) -->
+                                <button id="ipcrRefBackBtn" onclick="collapseIpcrInPanel()" class="hidden mt-2 flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-semibold transition">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                    Back to list
+                                </button>
+                            </div>
+
+                            <!-- Panel Content -->
+                            <div class="flex-1 overflow-y-auto" id="ipcrRefContent">
+                                <!-- Faculty IPCR List -->
+                                <div id="ipcrRefList" class="p-3 space-y-2">
+                                    <div class="flex items-center justify-center py-12">
+                                        <div class="text-center">
+                                            <div class="animate-spin w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full mx-auto mb-2"></div>
+                                            <p class="text-xs text-gray-400">Loading IPCRs...</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- IPCR Detail Viewer (hidden by default) -->
+                                <div id="ipcrRefDetail" class="hidden flex flex-col flex-1 min-h-0">
+                                    <div class="px-3 py-2 bg-blue-50 border-b border-blue-100 flex-shrink-0">
+                                        <p class="text-xs font-bold text-gray-900" id="ipcrRefDetailName"></p>
+                                        <p class="text-[10px] text-gray-500" id="ipcrRefDetailMeta"></p>
+                                    </div>
+                                    <!-- Zoom toolbar -->
+                                    <div class="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-200 flex-shrink-0">
+                                        <div class="flex items-center gap-1">
+                                            <button onclick="ipcrZoom('out')" class="w-6 h-6 rounded-md bg-white border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 hover:border-gray-400 transition text-xs font-bold" title="Zoom Out">−</button>
+                                            <button onclick="ipcrZoom('reset')" id="ipcrZoomLevel" class="h-6 px-2 rounded-md bg-white border border-gray-300 flex items-center justify-center text-[10px] font-semibold text-gray-600 hover:bg-gray-100 transition cursor-pointer min-w-[44px]" title="Reset Zoom">100%</button>
+                                            <button onclick="ipcrZoom('in')" class="w-6 h-6 rounded-md bg-white border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 hover:border-gray-400 transition text-xs font-bold" title="Zoom In">+</button>
+                                        </div>
+                                        <p class="text-[9px] text-gray-400 italic">Scroll to zoom · Drag to pan</p>
+                                    </div>
+                                    <!-- Zoomable / Draggable viewport -->
+                                    <div id="ipcrZoomViewport" class="flex-1 overflow-hidden cursor-grab relative min-h-0" style="touch-action: none;">
+                                        <div id="ipcrZoomContent" class="origin-top-left" style="transform: scale(1) translate(0px, 0px); will-change: transform;">
+                                            <table class="w-full border-collapse text-[10px]" style="min-width: 500px;">
+                                                <thead>
+                                                    <tr class="bg-gray-100">
+                                                        <th class="border border-gray-300 px-1.5 py-1 font-bold text-gray-700" style="width: 20%;">MFO</th>
+                                                        <th class="border border-gray-300 px-1.5 py-1 font-bold text-gray-700" style="width: 30%;">Success Indicators</th>
+                                                        <th class="border border-gray-300 px-1.5 py-1 font-bold text-gray-700" style="width: 25%;">Actual Accomplishments</th>
+                                                        <th class="border border-gray-300 px-1.5 py-1 font-bold text-gray-700" style="width: 6%;">Q</th>
+                                                        <th class="border border-gray-300 px-1.5 py-1 font-bold text-gray-700" style="width: 6%;">E</th>
+                                                        <th class="border border-gray-300 px-1.5 py-1 font-bold text-gray-700" style="width: 6%;">T</th>
+                                                        <th class="border border-gray-300 px-1.5 py-1 font-bold text-gray-700" style="width: 6%;">A</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="ipcrRefDetailTableBody">
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div><!-- end ipcrReferencePanel -->
+
+                        </div><!-- end opcrSplitscreenWrapper -->
                     </div>
                     @endif
 
@@ -4463,7 +4549,267 @@
             document.getElementById('opcrSaveDraftBtn')?.classList.remove('hidden');
             document.getElementById('opcrUpdateSubmissionBtn')?.classList.add('hidden');
             resetSupportingDocumentContext('opcr');
+            // Close the IPCR reference panel if open
+            const panel = document.getElementById('ipcrReferencePanel');
+            if (panel && !panel.classList.contains('hidden')) {
+                panel.classList.add('hidden');
+                document.getElementById('opcrCompareBtnLabel').textContent = 'Compare IPCRs';
+            }
         }
+
+        // =====================================================
+        // IPCR REFERENCE PANEL (Splitscreen for OPCR)
+        // =====================================================
+        let ipcrRefDataLoaded = false;
+        let ipcrRefData = [];
+
+        window.toggleIpcrReferencePanel = function() {
+            const panel = document.getElementById('ipcrReferencePanel');
+            const btnLabel = document.getElementById('opcrCompareBtnLabel');
+            if (!panel) return;
+
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                if (btnLabel) btnLabel.textContent = 'Hide IPCRs';
+                if (!ipcrRefDataLoaded) {
+                    loadApprovedIpcrs();
+                }
+            } else {
+                panel.classList.add('hidden');
+                if (btnLabel) btnLabel.textContent = 'Compare IPCRs';
+            }
+        };
+
+        function loadApprovedIpcrs() {
+            const listEl = document.getElementById('ipcrRefList');
+            const countEl = document.getElementById('ipcrRefCount');
+            if (!listEl) return;
+
+            listEl.innerHTML = '<div class="flex items-center justify-center py-12"><div class="text-center"><div class="animate-spin w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full mx-auto mb-2"></div><p class="text-xs text-gray-400">Loading IPCRs...</p></div></div>';
+
+            fetch('/faculty/opcr/approved-ipcrs', {
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.submissions) {
+                    ipcrRefData = data.submissions;
+                    ipcrRefDataLoaded = true;
+                    if (countEl) countEl.textContent = data.submissions.length + ' submitted IPCR' + (data.submissions.length !== 1 ? 's' : '') + ' in your department';
+                    renderIpcrRefList(data.submissions);
+                } else {
+                    listEl.innerHTML = '<p class="text-xs text-gray-400 text-center py-8">Could not load IPCRs.</p>';
+                }
+            })
+            .catch(() => {
+                listEl.innerHTML = '<p class="text-xs text-red-400 text-center py-8">Error loading IPCRs.</p>';
+            });
+        }
+
+        function renderIpcrRefList(submissions) {
+            const listEl = document.getElementById('ipcrRefList');
+            if (!listEl) return;
+
+            if (submissions.length === 0) {
+                listEl.innerHTML = '<div class="text-center py-10"><svg class="w-10 h-10 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><p class="text-xs text-gray-400">No submitted IPCRs found in your department.</p></div>';
+                return;
+            }
+
+            let html = '';
+            submissions.forEach(function(sub, idx) {
+                const isCal = sub.calibration_status === 'calibrated';
+                const scoreBadge = isCal
+                    ? '<span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-700">' + parseFloat(sub.calibration_score).toFixed(2) + '</span>'
+                    : '<span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-gray-100 text-gray-500">Pending</span>';
+
+                html += '<div class="ipcr-ref-card group cursor-pointer rounded-xl border border-gray-200 p-3 hover:border-indigo-300 hover:shadow-md transition-all duration-200" onclick="expandIpcrInPanel(' + idx + ')">' +
+                    '<div class="flex items-start justify-between gap-2">' +
+                        '<div class="min-w-0 flex-1">' +
+                            '<div class="flex items-center gap-1.5 mb-1">' +
+                                '<div class="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">' +
+                                    '<span class="text-[8px] font-bold text-indigo-600">' + (sub.user_name || 'U').charAt(0).toUpperCase() + '</span>' +
+                                '</div>' +
+                                '<p class="text-xs font-semibold text-gray-900 truncate">' + sub.user_name + '</p>' +
+                            '</div>' +
+                            '<p class="text-[10px] text-gray-600 truncate pl-6">' + sub.title + '</p>' +
+                            '<div class="flex items-center gap-2 mt-1 pl-6">' +
+                                '<span class="text-[9px] text-gray-400">' + sub.school_year + ' &bull; ' + sub.semester + '</span>' +
+                                scoreBadge +
+                            '</div>' +
+                        '</div>' +
+                        '<svg class="w-4 h-4 text-gray-300 group-hover:text-indigo-400 flex-shrink-0 mt-1 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>' +
+                    '</div>' +
+                '</div>';
+            });
+
+            listEl.innerHTML = html;
+        }
+
+        window.expandIpcrInPanel = function(index) {
+            const sub = ipcrRefData[index];
+            if (!sub) return;
+
+            document.getElementById('ipcrRefList').classList.add('hidden');
+            document.getElementById('ipcrRefDetail').classList.remove('hidden');
+            document.getElementById('ipcrRefBackBtn').classList.remove('hidden');
+            document.getElementById('ipcrRefBackBtn').classList.add('flex');
+
+            document.getElementById('ipcrRefDetailName').textContent = sub.user_name;
+            document.getElementById('ipcrRefDetailMeta').textContent = sub.title + ' \u2022 ' + sub.school_year + ' \u2022 ' + sub.semester;
+
+            const tbody = document.getElementById('ipcrRefDetailTableBody');
+            if (tbody && sub.table_body_html) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = '<table><tbody>' + sub.table_body_html + '</tbody></table>';
+                const rows = tempDiv.querySelectorAll('tr');
+                let html = '';
+
+                rows.forEach(function(row) {
+                    const cls = row.className || '';
+                    if (cls.includes('bg-green-100') || cls.includes('bg-purple-100') || cls.includes('bg-orange-100') || cls.includes('bg-blue-100') || cls.includes('bg-gray-100')) {
+                        const text = row.textContent.trim();
+                        let bgClass = 'bg-gray-50';
+                        if (cls.includes('bg-green-100')) bgClass = 'bg-green-50';
+                        else if (cls.includes('bg-purple-100')) bgClass = 'bg-purple-50';
+                        else if (cls.includes('bg-orange-100')) bgClass = 'bg-orange-50';
+                        else if (cls.includes('bg-blue-100')) bgClass = 'bg-blue-50';
+                        html += '<tr class="' + bgClass + '"><td colspan="7" class="border border-gray-200 px-1.5 py-1 font-semibold text-gray-700 text-[10px]">' + text + '</td></tr>';
+                        return;
+                    }
+
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 2) {
+                        html += '<tr>';
+                        for (let i = 0; i < 7; i++) {
+                            if (i < cells.length) {
+                                let cellText = '';
+                                const ta = cells[i].querySelector('textarea');
+                                const inp = cells[i].querySelector('input');
+                                if (ta) cellText = ta.textContent.trim();
+                                else if (inp) cellText = inp.value || inp.getAttribute('value') || '';
+                                else cellText = cells[i].textContent.trim();
+                                html += '<td class="border border-gray-200 px-1 py-0.5 text-gray-600 text-[9px] align-top">' + cellText + '</td>';
+                            } else {
+                                html += '<td class="border border-gray-200 px-1 py-0.5 text-gray-400 text-[9px]">-</td>';
+                            }
+                        }
+                        html += '</tr>';
+                    }
+                });
+
+                tbody.innerHTML = html;
+            }
+        };
+
+        window.collapseIpcrInPanel = function() {
+            document.getElementById('ipcrRefList').classList.remove('hidden');
+            document.getElementById('ipcrRefDetail').classList.add('hidden');
+            document.getElementById('ipcrRefBackBtn').classList.add('hidden');
+            document.getElementById('ipcrRefBackBtn').classList.remove('flex');
+            // Reset zoom/pan when going back to list
+            ipcrZoomState = { scale: 1, panX: 0, panY: 0 };
+            applyIpcrZoom();
+        };
+
+        // =====================================================
+        // IPCR ZOOM & DRAG
+        // =====================================================
+        var ipcrZoomState = { scale: 1, panX: 0, panY: 0 };
+        var ipcrDragState = { dragging: false, startX: 0, startY: 0, startPanX: 0, startPanY: 0 };
+
+        function applyIpcrZoom() {
+            var el = document.getElementById('ipcrZoomContent');
+            var label = document.getElementById('ipcrZoomLevel');
+            if (el) {
+                el.style.transform = 'scale(' + ipcrZoomState.scale + ') translate(' + ipcrZoomState.panX + 'px, ' + ipcrZoomState.panY + 'px)';
+            }
+            if (label) {
+                label.textContent = Math.round(ipcrZoomState.scale * 100) + '%';
+            }
+        }
+
+        window.ipcrZoom = function(action) {
+            var step = 0.15;
+            if (action === 'in') {
+                ipcrZoomState.scale = Math.min(3, ipcrZoomState.scale + step);
+            } else if (action === 'out') {
+                ipcrZoomState.scale = Math.max(0.3, ipcrZoomState.scale - step);
+            } else if (action === 'reset') {
+                ipcrZoomState.scale = 1;
+                ipcrZoomState.panX = 0;
+                ipcrZoomState.panY = 0;
+            }
+            applyIpcrZoom();
+        };
+
+        // Scroll-wheel zoom
+        document.addEventListener('DOMContentLoaded', function() {
+            var viewport = document.getElementById('ipcrZoomViewport');
+            if (!viewport) return;
+
+            viewport.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                var step = 0.08;
+                if (e.deltaY < 0) {
+                    ipcrZoomState.scale = Math.min(3, ipcrZoomState.scale + step);
+                } else {
+                    ipcrZoomState.scale = Math.max(0.3, ipcrZoomState.scale - step);
+                }
+                applyIpcrZoom();
+            }, { passive: false });
+
+            // Drag-to-pan
+            viewport.addEventListener('mousedown', function(e) {
+                if (e.button !== 0) return;
+                ipcrDragState.dragging = true;
+                ipcrDragState.startX = e.clientX;
+                ipcrDragState.startY = e.clientY;
+                ipcrDragState.startPanX = ipcrZoomState.panX;
+                ipcrDragState.startPanY = ipcrZoomState.panY;
+                viewport.style.cursor = 'grabbing';
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!ipcrDragState.dragging) return;
+                var dx = (e.clientX - ipcrDragState.startX) / ipcrZoomState.scale;
+                var dy = (e.clientY - ipcrDragState.startY) / ipcrZoomState.scale;
+                ipcrZoomState.panX = ipcrDragState.startPanX + dx;
+                ipcrZoomState.panY = ipcrDragState.startPanY + dy;
+                applyIpcrZoom();
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (ipcrDragState.dragging) {
+                    ipcrDragState.dragging = false;
+                    viewport.style.cursor = 'grab';
+                }
+            });
+
+            // Touch support for mobile
+            viewport.addEventListener('touchstart', function(e) {
+                if (e.touches.length !== 1) return;
+                ipcrDragState.dragging = true;
+                ipcrDragState.startX = e.touches[0].clientX;
+                ipcrDragState.startY = e.touches[0].clientY;
+                ipcrDragState.startPanX = ipcrZoomState.panX;
+                ipcrDragState.startPanY = ipcrZoomState.panY;
+            }, { passive: true });
+
+            viewport.addEventListener('touchmove', function(e) {
+                if (!ipcrDragState.dragging || e.touches.length !== 1) return;
+                var dx = (e.touches[0].clientX - ipcrDragState.startX) / ipcrZoomState.scale;
+                var dy = (e.touches[0].clientY - ipcrDragState.startY) / ipcrZoomState.scale;
+                ipcrZoomState.panX = ipcrDragState.startPanX + dx;
+                ipcrZoomState.panY = ipcrDragState.startPanY + dy;
+                applyIpcrZoom();
+                e.preventDefault();
+            }, { passive: false });
+
+            viewport.addEventListener('touchend', function() {
+                ipcrDragState.dragging = false;
+            });
+        });
 
         window.saveOpcrDocumentTitle = function() {
             const titleInput = document.getElementById('opcrDocumentTitle');

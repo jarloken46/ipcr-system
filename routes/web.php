@@ -369,6 +369,11 @@ Route::delete('/faculty/opcr/saved-copies/{id}', [OpcrSavedCopyController::class
     ->name('faculty.opcr.saved-copies.destroy')
     ->middleware(['auth', 'role:faculty,director', 'permission:dean.opcr.saved-copies,director.dashboard']);
 
+// OPCR - Approved IPCRs reference for splitscreen comparison
+Route::get('/faculty/opcr/approved-ipcrs', [FacultyDashboardController::class, 'getApprovedIpcrs'])
+    ->name('faculty.opcr.approved-ipcrs')
+    ->middleware(['auth', 'role:faculty,director']);
+
 // Supporting Document Routes
 Route::get(
     '/faculty/supporting-documents',

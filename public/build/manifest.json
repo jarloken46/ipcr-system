@@ -63,7 +63,7 @@
     ]
   },
   "resources/css/dashboard_faculty_my-ipcrs.css": {
-    "file": "assets/dashboard_faculty_my-ipcrs-LgvLODy9.css",
+    "file": "assets/dashboard_faculty_my-ipcrs-DXfWh3Uc.css",
     "src": "resources/css/dashboard_faculty_my-ipcrs.css",
     "isEntry": true,
     "name": "dashboard_faculty_my-ipcrs",
@@ -186,7 +186,7 @@
     "isEntry": true
   },
   "resources/js/dashboard_faculty_my-ipcrs_page.js": {
-    "file": "assets/dashboard_faculty_my-ipcrs_page-D2nrHr1h.js",
+    "file": "assets/dashboard_faculty_my-ipcrs_page-BuZBYDZY.js",
     "name": "dashboard_faculty_my-ipcrs_page",
     "src": "resources/js/dashboard_faculty_my-ipcrs_page.js",
     "isEntry": true
